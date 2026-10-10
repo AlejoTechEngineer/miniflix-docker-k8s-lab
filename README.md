@@ -11,6 +11,7 @@
 [![Maestría](https://img.shields.io/badge/Maestr%C3%ADa-Arquitectura%20de%20Software-3776AB.svg)]()
 [![Caso](https://img.shields.io/badge/Caso%20de%20estudio-Netflix-E50914.svg)]()
 [![Servicios](https://img.shields.io/badge/Servicios-6%20%C2%B7%207%20contenedores-150458.svg)]()
+[![Licencia](https://img.shields.io/badge/Licencia-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Funcional-success.svg)]()
 
 **[Contexto](#-contexto-y-alcance) • [Contenido](#-contenido-del-repositorio) • [Tecnologías](#-tecnologías-utilizadas) • [Arquitectura](#️-arquitectura) • [Ejecución](#-ejecución-del-laboratorio) • [Kubernetes](#️-despliegue-en-kubernetes) • [Autor](#-autor)**
@@ -39,6 +40,7 @@
 - [☸️ Despliegue en Kubernetes](#️-despliegue-en-kubernetes)
 - [✅ Buenas Prácticas Aplicadas](#-buenas-prácticas-aplicadas)
 - [📝 Nota](#-nota)
+- [⚖️ Licencia](#️-licencia)
 - [👤 Autor](#-autor)
 
 ---
@@ -71,6 +73,7 @@ Todo se despliega con **Docker Compose** en local, y se incluyen manifiestos de 
   <tr><td colspan="2"><b>📂 raíz</b></td></tr>
   <tr><td><code>docker-compose.yml</code></td><td>🐳 Orquesta los 6 servicios (7 contenedores) con healthchecks, límites de CPU/memoria (cgroups), réplicas y una red interna aislada</td></tr>
   <tr><td><code>README.md</code></td><td>📄 Este documento</td></tr>
+  <tr><td><code>LICENSE</code></td><td>⚖️ Licencia MIT</td></tr>
   <tr><td><code>.gitignore</code></td><td>🚫 Mantiene en local el material académico, los documentos editables y los temporales</td></tr>
   <tr><td colspan="2"><b>📂 services/</b></td></tr>
   <tr><td><code>catalog/</code></td><td>📚 <b>catalog-service</b> (Python + FastAPI): fuente de verdad de los metadatos de los 7 títulos</td></tr>
@@ -264,7 +267,7 @@ kubectl apply -f k8s/recommendation.yaml
 | **Namespace** | `miniflix`, con Pod Security Standard `restricted` |
 | **Deployment** | 3 réplicas, `RollingUpdate` con `maxSurge: 1` y `maxUnavailable: 0` (actualización sin caída) |
 | **Sondas** | `readinessProbe` y `livenessProbe` sobre `/health` |
-| **Seguridad** | Usuario no root (UID 10001), sin escalamiento de privilegios y sistema de archivos de solo lectura |
+| **Seguridad** | Usuario no root (UID 10001), sin escalamiento de privilegios, todas las *capabilities* eliminadas, perfil `seccomp` `RuntimeDefault` y sistema de archivos de solo lectura |
 | **Distribución** | `topologySpreadConstraints` para repartir réplicas entre zonas |
 | **Recursos** | `requests` 250m CPU / 128Mi · `limits` 500m CPU / 256Mi |
 | **HorizontalPodAutoscaler** | Entre **3 y 30 réplicas** al 65 % de uso de CPU |
@@ -295,11 +298,17 @@ Este laboratorio corresponde a una **actividad académica** y se elaboró con fi
 
 ---
 
+## ⚖️ Licencia
+
+Este proyecto se distribuye bajo la **Licencia MIT**. Consulta el archivo [`LICENSE`](LICENSE) para más detalles.
+
+---
+
 ## 👤 Autor
 
 <div align="center">
 
-Este laboratorio fue desarrollado en el marco del módulo **Contenerización de Aplicaciones de Software** de la **Maestría en Arquitectura de Software** del **Politécnico Grancolombiano** (Bogotá, Colombia).
+Este laboratorio fue desarrollado en el marco del módulo **Contenerización de Aplicaciones de Software** de la **Maestría en Arquitectura de Software** del **Politécnico Grancolombiano** (Bogotá, Colombia), bajo la orientación del docente **Victor Augusto Pedraza Bonilla**.
 
 | Autor | Perfil |
 |:---:|:---:|
