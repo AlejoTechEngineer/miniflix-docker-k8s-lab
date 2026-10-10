@@ -1,0 +1,62 @@
+# Despliegue en Kubernetes gestionado (EKS / AKS / GKE) del recommendation-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+  namespace: miniflix
+  labels: { app: recommendation, tier: backend }
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }    # despliegue sin caída
+  selector:
+    matchLabels: { app: recommendation }
+  template:
+    metadata:
+      labels: { app: recommendation, tier: backend }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001 }
+      topologySpreadConstraints:                         # réplicas repartidas entre zonas
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector: { matchLabels: { app: recommendation } }
+      containers:
+        - name: recommendation
+          image: registry.example.com/miniflix/recommendation:1.0.0
+          ports: [{ containerPort: 8000 }]
+          env:
+            - { name: CATALOG_URL, value: "http://catalog.miniflix.svc.cluster.local:8000" }
+            - { name: REDIS_URL,   value: "redis://cache.miniflix.svc.cluster.local:6379/0" }
+          resources:
+            requests: { cpu: 250m, memory: 128Mi }
+            limits:   { cpu: 500m, memory: 256Mi }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, periodSeconds: 5 }
+          livenessProbe:  { httpGet: { path: /health, port: 8000 }, periodSeconds: 10 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: recommendation, namespace: miniflix }
+spec:
+  selector: { app: recommendation }
+  ports: [{ port: 8000, targetPort: 8000 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: recommendation, namespace: miniflix }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: recommendation }
+  minReplicas: 3
+  maxReplicas: 30
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 65 } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: recommendation, namespace: miniflix }
+spec:
+  minAvailable: 2
+  selector: { matchLabels: { app: recommendation } }
