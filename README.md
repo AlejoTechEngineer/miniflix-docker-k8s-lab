@@ -275,6 +275,16 @@ kubectl apply -f k8s/recommendation.yaml
 
 > ℹ️ Los manifiestos cubren el **recommendation-service** como referencia de producción. Ajustar `image:` al registro de contenedores utilizado (EKS, AKS o GKE).
 
+> ⚠️ **Fallback esperado:** `k8s/` no incluye manifiestos de `catalog` ni de `cache`. Mientras no se desplieguen en el namespace `miniflix`, el servicio responde con `source: fallback`, que es la degradación elegante funcionando.
+>
+> ⚠️ **HPA y metrics-server:** el autoescalado necesita **metrics-server** en el clúster. Sin él, `kubectl -n miniflix get hpa` muestra `cpu: <unknown>/65%` y el número de réplicas no cambia. GKE y AKS lo incluyen por defecto; en EKS y en clústeres locales se instala con:
+>
+> ```bash
+> kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+> ```
+>
+> En clústeres locales como Docker Desktop puede requerir además el argumento `--kubelet-insecure-tls` en el Deployment `metrics-server` del namespace `kube-system`.
+
 ---
 
 ## ✅ Buenas Prácticas Aplicadas
